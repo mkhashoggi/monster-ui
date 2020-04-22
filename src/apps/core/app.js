@@ -292,7 +292,7 @@ define(function(require) {
 
 		bindEvents: function(container) {
 			var self = this,
-				spinner = container.find('.loading-wrapper');
+				spinner = container.find('.progress-indicator');
 
 			window.onerror = function(message, fileName, lineNumber, columnNumber, error) {
 				monster.error('js', {
