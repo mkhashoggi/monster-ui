@@ -21,7 +21,7 @@ define(function(require) {
 		accountBrowserRender: function(args) {
 			var self = this,
 				container = args.container,
-				parentId = args.parentId,
+				parentId = args.parentId || self.accountId,
 				selectedId = args.selectedId,
 				onAccountClick = args.onAccountClick,
 				onChildrenClick = args.onChildrenClick,
@@ -63,6 +63,7 @@ define(function(require) {
 				});
 
 				self.accountBrowserBindEvents({
+					currentAccountId: parentId,
 					template: layout,
 					onAccountClick: onAccountClick,
 					onChildrenClick: onChildrenClick,
@@ -83,6 +84,7 @@ define(function(require) {
 
 		accountBrowserBindEvents: function(args) {
 			var self = this,
+				currentAccountId = args.currentAccountId,
 				template = args.template,
 				onAccountClick = args.onAccountClick,
 				onChildrenClick = args.onChildrenClick,
@@ -98,7 +100,7 @@ define(function(require) {
 				accountList = template.find('.account-list'),
 				isLoading = false,
 				loader = $('<li class="content-centered account-list-loader"> <i class="fa fa-spinner fa-spin"></i></li>');
-
+			
 			if (!noFocus) {
 				setTimeout(function() { template.find('.search-query').focus(); });
 			}
@@ -107,10 +109,10 @@ define(function(require) {
 			template.on('click', function(e) {
 				e.stopPropagation();
 			});
-
+			
 			if (!monster.config.whitelabel.hideNewAccountCreation) {
 				template.find('.account-list-add').on('click', function() {
-					onNewAccountClick && onNewAccountClick();
+					onNewAccountClick && onNewAccountClick(currentAccountId);
 				});
 			}
 
@@ -219,6 +221,8 @@ define(function(require) {
 								children: data.accounts
 							};
 
+							currentAccountId = accountId;
+
 							if (dataBackButton) {
 								if (selectedId) {
 									template.find('.account-list').scrollTop(0);
@@ -316,7 +320,7 @@ define(function(require) {
 					accountList.append(loader);
 					var searchValue = accountList.data('search-value'),
 						apiResource = searchValue ? 'account.searchByName' : 'account.listChildren',
-						apiData = searchValue ? { accountName: searchValue } : { accountId: accountList.data('current') },
+						apiData = searchValue ? { accountName: searchValue } : { accountId: currentAccountId },
 						nextStartKey = accountList.data('next-key');
 
 					self.callApi({
@@ -349,8 +353,7 @@ define(function(require) {
 
 			if (addBackButton) {
 				accountList.on('click', '.account-previous-link', function() {
-					var currentAccountId = accountList.data('current') || self.accountId,
-						topAccountId = allowBackOnMasquerading ? monster.apps.auth.originalAccount.id : self.accountId;
+					var topAccountId = allowBackOnMasquerading ? monster.apps.auth.originalAccount.id : self.accountId;
 
 					if (currentAccountId !== topAccountId) {
 						self.callApi({
@@ -379,6 +382,8 @@ define(function(require) {
 												parentName: accountName,
 												children: data.accounts
 											};
+
+											currentAccountId = accountId;
 
 											onBackToParentClick && onBackToParentClick(callbackData);
 										}
